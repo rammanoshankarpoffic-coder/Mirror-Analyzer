@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<title>Mirror Analyzer Pro</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="logo">MIRROR <span class="logo-accent">ANALYZER</span></span>
+  </div>
+  <div class="topbar-center">
+    <span class="dot-live"></span>
+    <span class="live-text">LIVE SCAN ACTIVE</span>
+    <span class="divider">|</span>
+    <span class="stat-label">SESSION:</span>
+    <span class="stat-val" id="session">00:00:00</span>
+    <span class="divider">|</span>
+    <span class="stat-label">FPS:</span>
+    <span class="stat-val" id="fps">0.0</span>
+    <span class="divider">|</span>
+    <span class="stat-label">LANDMARKS:</span>
+    <span class="stat-val" id="landmarks">0</span>
+  </div>
+  <div class="topbar-right">
+    <span id="clock">--</span>
+  </div>
+</div>
+
+<!-- ALERT BANNER -->
+<div class="alert-banner" id="alertBanner">
+  <span id="alertText">INITIALIZING MIRROR ANALYZER...</span>
+</div>
+
+<!-- MAIN GRID -->
+<div class="main-grid">
+
+  <!-- LEFT COLUMN -->
+  <div class="left-col">
+
+    <!-- Eye Analysis -->
+    <div class="card">
+      <div class="card-title">
+        <span class="card-icon">◉</span> EYE ANALYSIS
+      </div>
+      <div class="card-sub">BOTH EYES</div>
+      <div class="metric-row">
+        <span class="metric-label">Fatigue level</span>
+        <div class="bar-wrap">
+          <div class="bar-fill yellow" id="bar-fatigue" style="width:0%"></div>
+        </div>
+        <span class="metric-val" id="val-fatigue">0%</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Redness</span>
+        <div class="bar-wrap">
+          <div class="bar-fill green" id="bar-redness" style="width:0%"></div>
+        </div>
+        <span class="metric-val" id="val-redness">Low</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Jaundice</span>
+        <span class="badge green" id="val-jaundice">NOT DETECTED</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Dark circles</span>
+        <span class="badge" id="val-dark">NONE</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Puffiness</span>
+        <span class="badge green">NORMAL</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Eyelid droop</span>
+        <span class="badge green">NONE</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Symmetry</span>
+        <div class="bar-wrap">
+          <div class="bar-fill green" id="bar-sym" style="width:0%"></div>
+        </div>
+        <span class="metric-val" id="val-sym">0%</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Blink rate</span>
+        <span class="metric-val blue">16/min</span>
+      </div>
+    </div>
+
+    <!-- Nose Analysis -->
+    <div class="card">
+      <div class="card-title">
+        <span class="card-icon">◈</span> NOSE ANALYSIS
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Redness</span>
+        <div class="bar-wrap">
+          <div class="bar-fill green" id="bar-nose-red" style="width:0%"></div>
+        </div>
+        <span class="metric-val" id="val-nose-red">Low</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Pore size</span>
+        <span class="badge green" id="val-pore">Normal</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Blackheads</span>
+        <span class="badge green" id="val-black">NONE</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Color change</span>
+        <span class="badge green" id="val-ncolor">Normal</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Symmetry</span>
+        <div class="bar-wrap">
+          <div class="bar-fill green" id="bar-nose-sym" style="width:0%"></div>
+        </div>
+        <span class="metric-val" id="val-nose-sym">0%</span>
+      </div>
+    </div>
+
+    <!-- Sensors -->
+    <div class="card">
+      <div class="card-title">
+        <span class="card-icon">⚡</span> SENSORS
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Temperature</span>
+        <span class="metric-val white">36.7 C</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Fever flag</span>
+        <span class="badge green">CLEAR</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Heart rate</span>
+        <span class="metric-val blue">72 bpm</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">SpO2</span>
+        <span class="metric-val green">98%</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">HRV stress</span>
+        <span class="metric-val yellow">Mild</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Tachycardia</span>
+        <span class="badge green">NONE</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CENTER COLUMN -->
+  <div class="center-col">
+
+    <!-- Face Feed -->
+    <div class="card face-card">
+      <div class="face-header">
+        <span class="card-title-inline">LIVE FACE SCAN — MEDIAPIPE 468 LANDMARKS</span>
+        <span class="rec-dot"></span>
+        <span class="rec-text">REC</span>
+      </div>
+      <div class="face-wrap">
+        <img id="faceImg" src="" alt="Feed">
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+      </div>
+      <div class="face-stats">
+        <div class="face-stat">
+          <div class="face-stat-val" id="st-lm">468</div>
+          <div class="face-stat-lbl">LANDMARKS</div>
+        </div>
+        <div class="face-stat">
+          <div class="face-stat-val" id="st-sym">0%</div>
+          <div class="face-stat-lbl">FACE SYMMETRY</div>
+        </div>
+        <div class="face-stat">
+          <div class="face-stat-val">Frontal</div>
+          <div class="face-stat-lbl">HEAD POSE</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sensor Boxes -->
+    <div class="sensor-boxes">
+      <div class="sbox">
+        <div class="sbox-val">72 <span class="sbox-unit">bpm</span></div>
+        <div class="sbox-lbl">HEART RATE</div>
+        <span class="badge green sbox-badge">NORMAL</span>
+      </div>
+      <div class="sbox">
+        <div class="sbox-val">98<span class="sbox-unit">%</span></div>
+        <div class="sbox-lbl">SPO2 OXYGEN</div>
+        <span class="badge green sbox-badge">GOOD</span>
+      </div>
+      <div class="sbox">
+        <div class="sbox-val">36.7<span class="sbox-unit">C</span></div>
+        <div class="sbox-lbl">TEMPERATURE</div>
+        <span class="badge green sbox-badge">NORMAL</span>
+      </div>
+      <div class="sbox">
+        <div class="sbox-val">38<span class="sbox-unit">ms</span></div>
+        <div class="sbox-lbl">HRV STRESS</div>
+        <span class="badge yellow sbox-badge">MILD</span>
+      </div>
+    </div>
+
+    <!-- Skin Model -->
+    <div class="card skin-card">
+      <div class="skin-header">
+        <span class="skin-label">AI SKIN MODEL — MOBILENETV2</span>
+      </div>
+      <div class="skin-disease" id="skinDisease">Analyzing...</div>
+      <div class="skin-meta">
+        <span id="skinConf">Confidence: 0%</span>
+        <span>Inference: 12ms</span>
+        <span>MobileNetV2</span>
+      </div>
+      <div class="score-bars" id="scoreBars"></div>
+    </div>
+
+    <!-- PHI-3 Report -->
+    <div class="card report-card">
+      <div class="card-title">
+        <span class="card-icon">📋</span>
+        PHI-3 MINI — HEALTH REPORT
+      </div>
+      <div class="report-text" id="reportText">
+        Initializing health analysis engine...
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="right-col">
+
+    <!-- Lip Analysis -->
+    <div class="card">
+      <div class="card-title">
+        <span class="card-icon">◇</span> LIP ANALYSIS
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Lip color</span>
+        <span class="metric-val blue" id="val-lipcolor">Normal</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Pallor</span>
+        <span class="badge green" id="val-pallor">NONE</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Cyanosis</span>
+        <span class="badge green" id="val-cyan">NOT DETECTED</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Dryness</span>
+        <span class="badge green" id="val-dry">None</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Dark borders</span>
+        <span class="badge green">NONE</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Symmetry</span>
+        <div class="bar-wrap">
+          <div class="bar-fill green" id="bar-lip-sym" style="width:0%"></div>
+        </div>
+        <span class="metric-val" id="val-lip-sym">0%</span>
+      </div>
+    </div>
+
+    <!-- Forehead + Skin -->
+    <div class="card">
+      <div class="card-title">
+        <span class="card-icon">◫</span> FOREHEAD + SKIN
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Stress lines</span>
+        <div class="bar-wrap small">
+          <div class="bar-fill yellow" style="width:40%"></div>
+        </div>
+        <span class="metric-val yellow">Low</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">T-zone oiliness</span>
+        <div class="bar-wrap small">
+          <div class="bar-fill orange" style="width:55%"></div>
+        </div>
+        <span class="metric-val orange">Mod</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Acne</span>
+        <span class="badge green">NONE</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Texture score</span>
+        <div class="bar-wrap">
+          <div class="bar-fill green" style="width:78%"></div>
+        </div>
+        <span class="metric-val green">78%</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Hydration</span>
+        <div class="bar-wrap">
+          <div class="bar-fill green" style="width:72%"></div>
+        </div>
+        <span class="metric-val green">72%</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Pigmentation</span>
+        <span class="badge green">NORMAL</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Pallor</span>
+        <span class="badge green">NONE</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Brow tension</span>
+        <div class="bar-wrap small">
+          <div class="bar-fill yellow" style="width:30%"></div>
+        </div>
+        <span class="metric-val yellow">Low</span>
+      </div>
+    </div>
+
+    <!-- Overall Health -->
+    <div class="card">
+      <div class="card-title">
+        <span class="card-icon">◎</span> OVERALL HEALTH SCORE
+      </div>
+      <div class="score-circles">
+        <div class="score-circle">
+          <svg viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="32" class="circle-bg"/>
+            <circle cx="40" cy="40" r="32" class="circle-fill green-stroke"
+              stroke-dasharray="201" stroke-dashoffset="35"/>
+          </svg>
+          <div class="circle-val green">83</div>
+          <div class="circle-lbl">OVERALL</div>
+        </div>
+        <div class="score-circle">
+          <svg viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="32" class="circle-bg"/>
+            <circle cx="40" cy="40" r="32" class="circle-fill blue-stroke"
+              stroke-dasharray="201" stroke-dashoffset="40"/>
+          </svg>
+          <div class="circle-val blue">80</div>
+          <div class="circle-lbl">SKIN</div>
+        </div>
+        <div class="score-circle">
+          <svg viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="32" class="circle-bg"/>
+            <circle cx="40" cy="40" r="32" class="circle-fill yellow-stroke"
+              stroke-dasharray="201" stroke-dashoffset="60"/>
+          </svg>
+          <div class="circle-val yellow">70</div>
+          <div class="circle-lbl">FATIGUE</div>
+        </div>
+      </div>
+      <div class="flag-list">
+        <div class="flag-row">
+          <span class="flag-label">Fever flag</span>
+          <span class="badge green">CLEAR</span>
+        </div>
+        <div class="flag-row">
+          <span class="flag-label">Low SpO2 flag</span>
+          <span class="badge green">CLEAR</span>
+        </div>
+        <div class="flag-row">
+          <span class="flag-label">Jaundice flag</span>
+          <span class="badge green">CLEAR</span>
+        </div>
+        <div class="flag-row">
+          <span class="flag-label">Melanoma flag</span>
+          <span class="badge green" id="flag-mel">CLEAR</span>
+        </div>
+        <div class="flag-row">
+          <span class="flag-label">Asymmetry flag</span>
+          <span class="badge green">CLEAR</span>
+        </div>
+        <div class="flag-row">
+          <span class="flag-label">Cyanosis flag</span>
+          <span class="badge green">CLEAR</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottombar">
+  <div class="bstat">
+    <div class="bstat-val blue">47</div>
+    <div class="bstat-lbl">INDICATORS</div>
+  </div>
+  <div class="bstat">
+    <div class="bstat-val blue" id="b-lm">468</div>
+    <div class="bstat-lbl">LANDMARKS</div>
+  </div>
+  <div class="bstat">
+    <div class="bstat-val blue">6</div>
+    <div class="bstat-lbl">FACE ZONES</div>
+  </div>
+  <div class="bstat">
+    <div class="bstat-val" id="b-alerts" style="color:#4caf50">0</div>
+    <div class="bstat-lbl">RED ALERTS</div>
+  </div>
+  <div class="bstat">
+    <div class="bstat-val blue">12ms</div>
+    <div class="bstat-lbl">INFERENCE</div>
+  </div>
+  <div class="bstat">
+    <div class="bstat-val white" id="b-fps">0</div>
+    <div class="bstat-lbl">FPS</div>
+  </div>
+  <div class="bstat">
+    <div class="bstat-val green">Good</div>
+    <div class="bstat-lbl">STATUS</div>
+  </div>
+</div>
+
+<script src="/static/js/main.js"></script>
+</body>
+</html>
